@@ -1,3 +1,2 @@
-# sample script
-
+import os# sample script
 
