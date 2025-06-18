@@ -52,6 +52,7 @@ jobs:
           languages: ${{ matrix.language }}
       - uses: github/codeql-action/analyze@v3
 
+
   dependency-review:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
