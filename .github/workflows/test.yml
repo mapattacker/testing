@@ -7,6 +7,10 @@ on:
       - success
 
 
+env:
+  ACCOUNT: ${{ github.repository_owner }}
+
+
 jobs:
 
   # ----------- TESTS ----------- #
