@@ -13,4 +13,6 @@ jobs:
   dummy:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "hello"
+      - run: |
+          sleep 30
+          echo "hello"
