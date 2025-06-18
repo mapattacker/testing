@@ -4,12 +4,76 @@ on:
   workflow_run:
     workflows: [build]
     types:
-      - completed
+      - success
 
 
 jobs:
 
-  dummy:
+  # ----------- TESTS ----------- #
+
+  unit-test:
+    runs-on: ubuntu-latest
+    container: 
+      image: ghcr.io/mapattacker/github-workflow-sample
+      credentials:
+          username: $ACCOUNT
+          password: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v3
+      - name: run tests
+        run: pytest --cov=project/ tests/unit_tests/ -v
+
+        
+  # ----------- SECURITY SCANS ----------- #
+
+  secrets-scan:
     runs-on: ubuntu-latest
     steps:
-      - run: echo "hello"
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: run secrets scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  sast-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: run sast scan
+        uses: AppThreat/sast-scan-action@master
+        with:
+          output: reports
+          type: python
+
+  dependency-scan:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/mapattacker/github-workflow-sample
+      credentials:
+          username: $ACCOUNT
+          password: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: run dependency scan
+        run: safety check
+
+  license-scan:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/mapattacker/github-workflow-sample
+      credentials:
+          username: $ACCOUNT
+          password: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: generate consolidated requirements
+        run: pip freeze > requirements-all.txt
+      - name: run license scan
+        id: license_check_report
+        uses: pilosus/action-pip-license-checker@v2
+        with:
+          requirements: 'requirements-all.txt'
+          fail: 'StrongCopyleft,NetworkCopyleft,Other,Error'
+      - name: Print report
+        if: ${{ always() }}
+        run: echo "${{ steps.license_check_report.outputs.report }}"
