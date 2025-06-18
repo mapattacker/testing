@@ -8,6 +8,11 @@ on:
     branches: [ master ]
 
 
+env:
+  ACCOUNT: ${{ github.repository_owner }}
+  REPOSITORY: ${{ github.event.repository.name }}
+
+
 jobs:
 
   build:
