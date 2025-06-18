@@ -1,10 +1,15 @@
 name: test
 
-on:  
-  workflow_run:
-    workflows: [build]
-    types:
-      - success
+# on:  
+#   workflow_run:
+#     workflows: [build]
+#     types:
+#       - success
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
 
 
 env:
