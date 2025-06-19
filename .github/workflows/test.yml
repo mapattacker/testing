@@ -71,7 +71,7 @@ jobs:
   # ----------- PACKAGE ----------- #
 
   package-dev:
-    # if: github.event_name == 'workflow_dispatch'
+    if: github.event_name == 'workflow_dispatch'
     needs: [unit-test, dependency-review]
     runs-on: ubuntu-latest
     container: docker:git
