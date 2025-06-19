@@ -69,4 +69,4 @@ jobs:
             AGPL-1.0
           fail-on-severity: low
           fail-on-scopes: runtime
-          comment-summary-in-pr: always
+          comment-summary-in-pr: true
