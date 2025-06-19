@@ -47,7 +47,7 @@ jobs:
 
 
   build-prd:
-    if: github.ref == 'refs/heads/' + github.event.repository.default_branch
+    if: github.ref == 'refs/heads/master'
     runs-on: ubuntu-latest
     container: docker:git
     permissions:
