@@ -60,8 +60,7 @@ jobs:
       contents: read
       pull-requests: write
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/dependency-review-action@v3
+      - uses: actions/dependency-review-action@v4
         with:
           deny-licenses: |
             GPL-3.0
