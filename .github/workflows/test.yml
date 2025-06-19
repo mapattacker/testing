@@ -62,10 +62,7 @@ jobs:
     steps:
       - uses: actions/dependency-review-action@v4
         with:
-          deny-licenses: |
-            GPL-2.0
-            AGPL-3.0
-            AGPL-1.0
+          deny-licenses: GPL-2.0, AGPL-3.0, AGPL-1.0
           fail-on-severity: low
           fail-on-scopes: runtime
           comment-summary-in-pr: true
