@@ -6,7 +6,7 @@ name: test
 #     types:
 #       - success
 on:
-  pull_request:
+  # pull_request:
     # branches: [ master ]
   workflow_dispatch:
 
