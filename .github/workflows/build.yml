@@ -15,12 +15,15 @@ env:
 
 jobs:
 
-  build:
+  build-dev:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     container: docker:git
     permissions:
       contents: read
       packages: write
+    env:
+      IMAGE_TAG: dev
     steps:
       - uses: actions/checkout@v3
       - name: resolve paths-filter error
@@ -41,3 +44,35 @@ jobs:
           echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u $ACCOUNT --password-stdin
           docker build -t ghcr.io/${ACCOUNT}/${REPOSITORY} .
           docker push ghcr.io/${ACCOUNT}/${REPOSITORY}
+
+
+  build-prd:
+    if: github.ref == 'refs/heads/' + github.event.repository.default_branch
+    runs-on: ubuntu-latest
+    container: docker:git
+    permissions:
+      contents: read
+      packages: write
+    env:
+      IMAGE_TAG: latst
+    steps:
+      - uses: actions/checkout@v3
+      - name: resolve paths-filter error
+        run: git config --global --add safe.directory /__w/${REPOSITORY}/${REPOSITORY}
+      - name: detect build file changes
+        uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            buildfiles:
+              - Dockerfile
+              - project/*
+              - requirements.txt
+              - tests/requirements-test.txt
+      - name: build & push image to registry
+        if: steps.filter.outputs.buildfiles == 'true'
+        run: |
+          echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u $ACCOUNT --password-stdin
+          docker build -t ghcr.io/${ACCOUNT}/${REPOSITORY} .
+          docker push ghcr.io/${ACCOUNT}/${REPOSITORY}
+  
