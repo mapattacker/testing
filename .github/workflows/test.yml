@@ -22,9 +22,20 @@ concurrency:
 
 
 jobs:
+
+   # ----------- LINT ----------- #
+  
+  lint-flake8:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: py-actions/flake8@v2
+
+
   # ----------- TESTS ----------- #
 
   unit-test:
+    needs: [lint-flake8]
     runs-on: ubuntu-latest
     container: 
       image: ghcr.io/mapattacker/github-workflow-sample
@@ -35,15 +46,6 @@ jobs:
       - uses: actions/checkout@v4
       - name: run tests
         run: pytest --cov=project/ tests/unit_tests/ -v
-
-
-  # ----------- LINT ----------- #
-  
-  lint-flake8:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: py-actions/flake8@v2
 
 
   # ----------- SECURITY SCANS ----------- #
