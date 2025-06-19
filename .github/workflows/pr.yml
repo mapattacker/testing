@@ -1,0 +1,110 @@
+name: test
+
+# on:  
+#   workflow_run:
+#     workflows: [build]
+#     types:
+#       - success
+on:
+  pull_request:
+    branches: [ master ]
+  # workflow_dispatch:
+  #   inputs:
+  #     branch:
+  #       description: 'Branch to build from'
+  #       required: true
+  #       default: 'None'
+
+
+env:
+  ACCOUNT: ${{ github.repository_owner }}
+  REPOSITORY: ${{ github.event.repository.name }}
+
+
+concurrency:
+  # only run a workflow run for each branch
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+
+jobs:
+
+   # ----------- LINT ----------- #
+  
+  lint-flake8:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: py-actions/flake8@v2
+
+
+  # ----------- TESTS ----------- #
+
+  unit-test:
+    if: github.event_name == 'pull_request'
+    needs: [lint-flake8]
+    runs-on: ubuntu-latest
+    container: 
+      image: ghcr.io/mapattacker/github-workflow-sample
+      credentials:
+          username: $ACCOUNT
+          password: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: run tests
+        run: pytest --cov=project/ tests/unit_tests/ -v
+
+
+  # ----------- SECURITY SCANS ----------- #
+
+  dependency-review:
+    if: github.event_name == 'pull_request'
+    needs: [lint-flake8]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/dependency-review-action@v4
+        with:
+          deny-licenses: GPL-3.0, GPL-2.0, AGPL-3.0, AGPL-1.0
+          fail-on-severity: low
+          fail-on-scopes: runtime
+          comment-summary-in-pr: true
+
+
+  # ----------- PACKAGE ----------- #
+
+  package-dev:
+    # if: github.event_name == 'workflow_dispatch'
+    needs: [dependency-review, unit-test]
+    runs-on: ubuntu-latest
+    container: docker:git
+    environment:
+      name: approval
+    permissions:
+      contents: read
+      packages: write
+    env:
+      IMAGE_TAG: dev
+    steps:
+      - uses: actions/checkout@v4
+      - name: resolve paths-filter error
+        run: git config --global --add safe.directory /__w/${REPOSITORY}/${REPOSITORY}
+      - name: detect build file changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            buildfiles:
+              - Dockerfile
+              - project/*
+              - requirements.txt
+              - tests/requirements-test.txt
+      - name: build & push image to registry
+        if: steps.filter.outputs.buildfiles == 'true'
+        run: |
+          echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u $ACCOUNT --password-stdin
+          docker build -t ghcr.io/${ACCOUNT}/${REPOSITORY} .
+          docker push ghcr.io/${ACCOUNT}/${REPOSITORY}
