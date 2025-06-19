@@ -53,7 +53,8 @@ jobs:
   # ----------- SECURITY SCANS ----------- #
 
   dependency-review:
-    if: github.event_name == 'pull_request'
+    # if: github.event_name == 'pull_request'
+    needs: [lint-flake8]
     runs-on: ubuntu-latest
     permissions:
       contents: read
