@@ -15,6 +15,12 @@ env:
   ACCOUNT: ${{ github.repository_owner }}
 
 
+concurrency:
+  # only run a workflow run for each branch
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+
 jobs:
 
   # ----------- TESTS ----------- #
