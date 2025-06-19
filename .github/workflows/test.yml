@@ -32,6 +32,7 @@ jobs:
    # ----------- LINT ----------- #
   
   lint-flake8:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -41,6 +42,7 @@ jobs:
   # ----------- TESTS ----------- #
 
   unit-test:
+    if: github.event_name == 'pull_request'
     needs: [lint-flake8]
     runs-on: ubuntu-latest
     container: 
@@ -76,7 +78,6 @@ jobs:
 
   package-dev:
     if: github.event_name == 'workflow_dispatch'
-    needs: [unit-test, dependency-review]
     runs-on: ubuntu-latest
     container: docker:git
     permissions:
