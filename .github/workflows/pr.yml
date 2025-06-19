@@ -63,6 +63,7 @@ jobs:
   
   lint-flake8:
     if: github.event_name == 'pull_request'
+    needs: [build]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -86,7 +87,7 @@ jobs:
         run: pytest --cov=project/ tests/unit_tests/ -v
 
 
-  # ----------- SECURITY SCANS ----------- #
+  # ----------- SECURITY ----------- #
 
   dependency-review:
     if: github.event_name == 'pull_request'
@@ -107,7 +108,6 @@ jobs:
   # ----------- PACKAGE ----------- #
 
   package-dev:
-    # if: github.event_name == 'workflow_dispatch'
     needs: [dependency-review, unit-test]
     runs-on: ubuntu-latest
     container: docker:git
