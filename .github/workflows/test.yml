@@ -80,8 +80,6 @@ jobs:
       IMAGE_TAG: dev
     steps:
       - uses: actions/checkout@v4
-      - name: resolve paths-filter error
-        run: git config --global --add safe.directory /__w/${REPOSITORY}/${REPOSITORY}
       - name: detect build file changes
         uses: dorny/paths-filter@v3
         id: filter
