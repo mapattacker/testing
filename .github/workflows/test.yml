@@ -22,7 +22,6 @@ concurrency:
 
 
 jobs:
-
   # ----------- TESTS ----------- #
 
   unit-test:
