@@ -57,6 +57,7 @@ jobs:
           echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u $ACCOUNT --password-stdin
           docker build -t ghcr.io/${ACCOUNT}/${REPOSITORY} .
           docker push ghcr.io/${ACCOUNT}/${REPOSITORY}
+      - uses: ./.github/actions/slack-on-failure
 
 
    # ----------- LINT ----------- #
@@ -68,6 +69,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: py-actions/flake8@v2
+      - uses: ./.github/actions/slack-on-failure
 
 
   # ----------- TESTS ----------- #
@@ -85,6 +87,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: run tests
         run: pytest --cov=project/ tests/unit_tests/ -v
+      - uses: ./.github/actions/slack-on-failure
 
 
   # ----------- SECURITY ----------- #
@@ -103,6 +106,7 @@ jobs:
           fail-on-severity: low
           fail-on-scopes: runtime
           comment-summary-in-pr: true
+      - uses: ./.github/actions/slack-on-failure
 
 
   # ----------- PACKAGE ----------- #
@@ -138,3 +142,4 @@ jobs:
           echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u $ACCOUNT --password-stdin
           docker build -t ghcr.io/${ACCOUNT}/${REPOSITORY} .
           docker push ghcr.io/${ACCOUNT}/${REPOSITORY}
+      - uses: ./.github/actions/slack-on-failure
