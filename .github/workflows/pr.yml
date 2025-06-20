@@ -29,14 +29,47 @@ concurrency:
 
 jobs:
 
+  build:
+    runs-on: ubuntu-latest
+    container: docker:git
+    permissions:
+      contents: read
+      packages: write
+    env:
+      IMAGE_TAG: dev
+    steps:
+      - uses: actions/checkout@v4
+      - name: resolve paths-filter error
+        run: git config --global --add safe.directory /__w/${REPOSITORY}/${REPOSITORY}
+      - name: detect build file changes
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            buildfiles:
+              - Dockerfile
+              - project/*
+              - requirements.txt
+              - tests/requirements-test.txt
+      - name: build & push image to registry
+        if: steps.filter.outputs.buildfiles == 'true'
+        run: |
+          echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u $ACCOUNT --password-stdin
+          docker build -t ghcr.io/${ACCOUNT}/${REPOSITORY} .
+          docker push ghcr.io/${ACCOUNT}/${REPOSITORY}
+      - uses: ./.github/actions/slack-on-failure
+
+
    # ----------- LINT ----------- #
   
   lint-flake8:
     if: github.event_name == 'pull_request'
+    needs: [build]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: py-actions/flake8@v2
+      - uses: ./.github/actions/slack-on-failure
 
 
   # ----------- TESTS ----------- #
@@ -54,11 +87,12 @@ jobs:
       - uses: actions/checkout@v4
       - name: run tests
         run: pytest --cov=project/ tests/unit_tests/ -v
+      - uses: ./.github/actions/slack-on-failure
 
 
-  # ----------- SECURITY SCANS ----------- #
+  # ----------- SECURITY ----------- #
 
-  dependency-review:
+  security-dependency-review:
     if: github.event_name == 'pull_request'
     needs: [lint-flake8]
     runs-on: ubuntu-latest
@@ -66,19 +100,45 @@ jobs:
       contents: read
       pull-requests: write
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/dependency-review-action@v4
         with:
           deny-licenses: GPL-3.0, GPL-2.0, AGPL-3.0, AGPL-1.0
           fail-on-severity: low
           fail-on-scopes: runtime
           comment-summary-in-pr: true
+      - uses: ./.github/actions/slack-on-failure
+
+
+  security-sast:
+    name: CodeQL SAST
+    needs: [lint-flake8]
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [python]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
 
 
   # ----------- PACKAGE ----------- #
 
   package-dev:
-    # if: github.event_name == 'workflow_dispatch'
-    needs: [dependency-review, unit-test]
+    needs: [security-dependency-review, security-sast, unit-test]
     runs-on: ubuntu-latest
     container: docker:git
     environment:
@@ -108,3 +168,4 @@ jobs:
           echo ${{ secrets.GITHUB_TOKEN }} | docker login ghcr.io -u $ACCOUNT --password-stdin
           docker build -t ghcr.io/${ACCOUNT}/${REPOSITORY} .
           docker push ghcr.io/${ACCOUNT}/${REPOSITORY}
+      - uses: ./.github/actions/slack-on-failure

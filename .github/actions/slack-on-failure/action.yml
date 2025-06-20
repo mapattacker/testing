@@ -1,0 +1,17 @@
+name: Slack Notify on Failure
+description: Sends a Slack message when a job fails
+runs:
+  using: "composite"
+  steps:
+    - name: Slack Notify on Failure
+      # if: failure()
+      # uses: rtCamp/action-slack-notify@v2
+      run: |
+        echo ${{ github.workflow }}
+        echo ${{ github.actor }}
+        echo $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+      shell: sh
+      # env:
+      #   SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
+      #   SLACK_MESSAGE: ":x: Job '${{ github.job }}' failed. Workflow: `${{ github.workflow }}` <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>"
+      #   SLACK_COLOR: danger
