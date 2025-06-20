@@ -4,10 +4,14 @@ runs:
   using: "composite"
   steps:
     - name: Slack Notify on Failure
-      run: echo "testing"
-      shell: sh
       # if: failure()
       # uses: rtCamp/action-slack-notify@v2
+      run: |
+        :x: Job *${{ github.job }}* failed  
+        • Workflow: `${{ github.workflow }}`
+        • Triggered by: `${{ github.actor }}`
+        • Timestamp (UTC): `${{ env.TIMESTAMP }}`
+      shell: sh
       # env:
       #   SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK_URL }}
       #   SLACK_MESSAGE: ":x: Job '${{ github.job }}' failed. Workflow: `${{ github.workflow }}` <${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|View Run>"
