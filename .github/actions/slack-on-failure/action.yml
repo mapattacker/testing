@@ -5,7 +5,7 @@ runs:
   steps:
     - name: Slack Notify on Failure
       run: echo "testing"
-      shell: bash
+      shell: sh
       # if: failure()
       # uses: rtCamp/action-slack-notify@v2
       # env:
