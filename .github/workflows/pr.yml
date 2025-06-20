@@ -112,6 +112,7 @@ jobs:
 
   security-sast:
     name: CodeQL SAST
+    needs: [lint-flake8]
     runs-on: ubuntu-latest
     permissions:
       actions: read
