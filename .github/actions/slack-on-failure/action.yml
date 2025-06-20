@@ -4,8 +4,8 @@ runs:
   using: "composite"
   steps:
     - name: Slack Notify on Failure
-      run: |
-          echo "testing"
+      run: echo "testing"
+      shell: bash
       # if: failure()
       # uses: rtCamp/action-slack-notify@v2
       # env:
