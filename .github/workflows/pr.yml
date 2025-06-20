@@ -92,7 +92,7 @@ jobs:
 
   # ----------- SECURITY ----------- #
 
-  dependency-review:
+  security-dependency-review:
     if: github.event_name == 'pull_request'
     needs: [lint-flake8]
     runs-on: ubuntu-latest
@@ -110,10 +110,34 @@ jobs:
       - uses: ./.github/actions/slack-on-failure
 
 
+  security-sast:
+    name: CodeQL SAST
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [python]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+      - name: Autobuild
+        uses: github/codeql-action/autobuild@v3
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+
+
   # ----------- PACKAGE ----------- #
 
   package-dev:
-    needs: [dependency-review, unit-test]
+    needs: [security-dependency-review, security-sast, unit-test]
     runs-on: ubuntu-latest
     container: docker:git
     environment:
